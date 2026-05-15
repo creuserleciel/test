@@ -20,13 +20,8 @@ jobs:
           curl -s \
             -H "Authorization: Bearer $GRIST_API_KEY" \
             "https://grist.numerique.gouv.fr/api/docs/9FFW3ALPVboV/tables/Elus/records" \
-            | python3 -c "
-import json, sys
-data = json.load(sys.stdin)
-noms = [r['fields'].get('nom', '') for r in data.get('records', []) if r['fields'].get('nom')]
-noms.sort()
-json.dump(noms, sys.stdout, ensure_ascii=False)
-" > data.json
+            > raw.json
+          python3 extract.py
 
       - name: Commit data.json
         run: |

@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Liste des Élus – Plan de mandat GBM</title>
+  <style>
+    :root {
+      --bg: #f7f6f2;
+      --surface: #ffffff;
+      --border: #e2e0d8;
+      --text: #1a1a18;
+      --muted: #6b6b65;
+      --accent: #185FA5;
+      --accent-light: #E6F1FB;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Georgia', serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 3rem 1.5rem;
+    }
+
+    header {
+      max-width: 640px;
+      margin: 0 auto 2.5rem;
+      border-bottom: 1.5px solid var(--border);
+      padding-bottom: 1.5rem;
+    }
+
+    header .eyebrow {
+      font-family: 'Courier New', monospace;
+      font-size: 11px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 0.5rem;
+    }
+
+    header h1 {
+      font-size: 1.75rem;
+      font-weight: normal;
+      line-height: 1.3;
+    }
+
+    header p {
+      margin-top: 0.5rem;
+      font-size: 0.9rem;
+      color: var(--muted);
+      font-family: 'Courier New', monospace;
+    }
+
+    #status {
+      max-width: 640px;
+      margin: 0 auto 1.5rem;
+      font-size: 0.875rem;
+      color: var(--muted);
+      font-family: 'Courier New', monospace;
+    }
+
+    #status.error {
+      color: #A32D2D;
+      background: #FCEBEB;
+      padding: 0.75rem 1rem;
+      border-radius: 6px;
+      border: 1px solid #F7C1C1;
+    }
+
+    ol {
+      max-width: 640px;
+      margin: 0 auto;
+      list-style: none;
+      counter-reset: elus;
+    }
+
+    ol li {
+      counter-increment: elus;
+      display: flex;
+      align-items: baseline;
+      gap: 1rem;
+      padding: 0.875rem 0;
+      border-bottom: 0.5px solid var(--border);
+    }
+
+    ol li:last-child { border-bottom: none; }
+
+    ol li::before {
+      content: counter(elus, decimal-leading-zero);
+      font-family: 'Courier New', monospace;
+      font-size: 11px;
+      color: var(--muted);
+      min-width: 28px;
+      flex-shrink: 0;
+    }
+
+    ol li span {
+      font-size: 1rem;
+      line-height: 1.4;
+    }
+
+    #count {
+      max-width: 640px;
+      margin: 1.5rem auto 0;
+      font-family: 'Courier New', monospace;
+      font-size: 11px;
+      color: var(--muted);
+      text-align: right;
+    }
+
+    .spinner {
+      display: inline-block;
+      width: 14px;
+      height: 14px;
+      border: 2px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      vertical-align: middle;
+      margin-right: 6px;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+
+  <header>
+    <p class="eyebrow">Plan de mandat · GBM</p>
+    <h1>Liste des Élus</h1>
+    <p>Source&nbsp;: Grist · table <code>Elus</code></p>
+  </header>
+
+  <div id="status"><span class="spinner"></span> Chargement…</div>
+  <ol id="liste"></ol>
+  <p id="count"></p>
+
+  <script>
+    const DOC_ID = '9FFW3ALPVboV';
+    const TABLE   = 'Elus';
+    const COLUMN  = 'nom';
+    const BASE    = 'https://grist.numerique.gouv.fr';
+
+    // ⚠️  Remplace <TA_CLE_API> par ta vraie clé Grist
+    const API_KEY = '<TA_CLE_API>';
+
+    async function load() {
+      const status = document.getElementById('status');
+      const liste  = document.getElementById('liste');
+      const count  = document.getElementById('count');
+
+      try {
+        const url = `${BASE}/api/docs/${DOC_ID}/tables/${TABLE}/records`;
+        const res = await fetch(url, {
+          headers: { 'Authorization': `Bearer ${API_KEY}` }
+        });
+
+        if (!res.ok) {
+          throw new Error(`Erreur ${res.status} : ${res.statusText}`);
+        }
+
+        const data = await res.json();
+        const records = data.records || [];
+
+        status.textContent = '';
+
+        if (records.length === 0) {
+          status.textContent = 'Aucun enregistrement trouvé.';
+          return;
+        }
+
+        records.forEach(r => {
+          const nom = r.fields[COLUMN] || '(sans nom)';
+          const li = document.createElement('li');
+          li.innerHTML = `<span>${nom}</span>`;
+          liste.appendChild(li);
+        });
+
+        count.textContent = `${records.length} élu${records.length > 1 ? 's' : ''} au total`;
+
+      } catch (err) {
+        status.className = 'error';
+        status.textContent = `Impossible de charger les données : ${err.message}`;
+        console.error(err);
+      }
+    }
+
+    load();
+  </script>
+
+</body>
+</html>
